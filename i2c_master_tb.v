@@ -43,7 +43,7 @@ initial begin
     clk = 0;
     reset = 0 ;
     start = 1;
-    #50000 $finish;    
+    #5000000 $finish;    
 end
 
 endmodule
