@@ -50,6 +50,7 @@ module top(
     reg clk2 = 0;
     wire [23:0] total_data[0:3749];
     wire [12:0] last_index;
+    wire acquired;
     i2c_master_debug i2c_master(.start(start), .clk(clk2), .reset(reset), .scl(scl), .sda_i(sda_i), .sda_o(sda_o), .interupt(interupt), .sda_dir(sda_dir) , .fifo_data(fifo_data), .num_samples(num_samples), .data_ready(data_ready), .debug(debug), .fifo_rd_ptr(fifo_rd_ptr), .fifo_wr_ptr(fifo_wr_ptr) );
     mem_buffer mem_buffer (.clk(clk2), .reset(reset), .num_samples(num_samples), .fifo_data(fifo_data), .data_ready(data_ready));
     

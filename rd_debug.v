@@ -10,7 +10,7 @@ module i2c_master_debug(
     output sda_dir,
     output reg [767:0]fifo_data,
     output reg [5:0]num_samples,
-    output reg data_ready,
+    inout data_ready,
     output reg [4:0]debug,
     output reg [7:0] fifo_rd_ptr,
     output reg [7:0] fifo_wr_ptr
@@ -21,7 +21,7 @@ module i2c_master_debug(
     // reg [4:0] debug;
     reg [3:0] counter = 4'b0;
     reg clk_reg = 1'b0;
-    
+    reg temp_data_ready;
     // reg [768:0]fifo_data = 0;
     always @ (posedge clk or posedge reset )
     if (reset) begin
@@ -115,7 +115,7 @@ module i2c_master_debug(
         if (reset) begin
             state_reg <= START;
             count <= 14'd2000;
-            data_ready <= 0;
+            temp_data_ready <= 0;
             fifo_data <= 0;
 
         end
@@ -134,7 +134,7 @@ module i2c_master_debug(
                     if (count == 14'd2014)begin
                         o_bit <= 1'b0;
                         fifo_data <= 0;
-                        data_ready <= 0;
+
                     end
                     if (count == 14'd2023)begin
                         state_reg <= SEND_ADDRESS_WR_INT;
@@ -277,6 +277,7 @@ module i2c_master_debug(
                         timing <= count + 1;
                         t_timing <= count + 1;
                         i<= 7;
+                        
                     end
                  end
                  
@@ -595,7 +596,9 @@ module i2c_master_debug(
                         // num_samples <= fifo_wr_ptr - fifo_rd_ptr;
                         t_num_samples <= rd_ptr - wr_ptr;
                         num_samples <= rd_ptr - wr_ptr;
-                        j = 768;
+                        j = 767;
+                        fifo_data <= 24'd0;
+                        temp_data_ready <= 0;
 
                     end
 
@@ -607,9 +610,9 @@ module i2c_master_debug(
                     end
                     else begin
                         if (count == t_timing ) begin
-                            if (i > -1) begin
+                            if (i >= 0) begin
                                 // r_data[i] <= i_bit;
-                                fifo_data[j] <= i_bit;
+                                fifo_data[j] <= 1;
                                 // fifo_data = fifo_data + 1;
                                 r_data = r_data + 1;
                                 i = i - 1;
@@ -670,11 +673,10 @@ module i2c_master_debug(
                 REC_NACK : begin
                    
                     if (count == timing+17) begin
-                        data_ready <= 1;
                         state_reg <= STOP;
                         timing <= count+1;
                         o_bit <= 0;
-                        data_ready <= 1;
+                        temp_data_ready <= 1;
                         
                     end
                 end
@@ -685,7 +687,7 @@ module i2c_master_debug(
                     if (count == timing + 10) begin 
                         o_bit <= 1;
                     end
-                    $monitor("fifo_we_ptr : %d",fifo_wr_ptr);
+                    // $monitor("fifo_we_ptr : %d",fifo_wr_ptr);
                     if(count == timing + 19) begin 
                         state_reg <= REPEATED_START6;
                         timing <= count + 1;
@@ -697,6 +699,7 @@ module i2c_master_debug(
 
 
             endcase
+            
         end
     end 
 
@@ -735,4 +738,10 @@ module i2c_master_debug(
 
     assign sda_o = sda_dir ? o_bit : 1'bz;
     assign i_bit = sda_i;
+    assign data_ready = temp_data_ready;
+
+
+    // always @(posedge scl) begin
+    //     $monitor ("I : %d", j);
+    // end
 endmodule
